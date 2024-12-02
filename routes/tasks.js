@@ -1,18 +1,26 @@
-const express = requir('express');
+const express = require('express');
 const router = express.Router();
 const res = require('express/lib/response');
 const Task = require('../models/Task');
 
 //Create Task
 router.post('/', async (req, res) => {
-    const newTask = new Task(req.body);
     try {
-        const savedTask = await newTask.save();
-        res.status(201).json(savedTask);
-    } catch (err) {
-        res.status(500).json(err);
+      const { title, description } = req.body;
+      console.log('Request body:', req.body);
+  
+      if (!title) {
+        return res.status(400).json({ error: 'Title is required' });
+      }
+  
+      const newTask = new Task({ title, description });
+      const savedTask = await newTask.save();
+      res.status(201).json(savedTask);
+    } catch (error) {
+      console.error("Erreur lors de la création de la tâche :", error);
+      res.status(500).json(error);
     }
-});
+  });
 
 //Read All Tasks
 router.get('/', async (req, res) => {
@@ -24,13 +32,17 @@ router.get('/', async (req, res) => {
     }
 });
 
-//Read One Tasks
+// Read One Task
 router.get('/:id', async (req, res) => {
     try {
-        const tasks = await Task.findById();
-        res.status(200).json(tasks);
+        const task = await Task.findById(req.params.id);
+        if (!task) {
+            return res.status(404).json({ message: 'Task not found' });
+        }
+        res.status(200).json(task);
     } catch (err) {
-        res.statis(500).json(err);
+        console.error('Erreur lors de la récupération de la tâche :', err);
+        res.status(500).json({ message: 'Internal server error' });
     }
 });
 
